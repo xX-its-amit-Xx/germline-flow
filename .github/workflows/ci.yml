@@ -64,13 +64,13 @@ jobs:
           cache-environment: true
           cache-downloads: true
 
-      - name: Set up Micromamba (test-data builder env)
-        uses: mamba-org/setup-micromamba@v1
-        with:
-          environment-file: workflow/envs/test-driver.yaml
-          environment-name: gflow-test-driver
-          cache-environment: true
-          cache-downloads: true
+      - name: Create test-data builder env
+        # Calling setup-micromamba twice in one job breaks the post-job cleanup
+        # of the first action (it removes a shell file the second one needed),
+        # so we create the secondary env with `micromamba env create` instead.
+        shell: bash -l {0}
+        run: |
+          micromamba env create -y -n gflow-test-driver -f workflow/envs/test-driver.yaml
 
       - name: Cache snakemake conda envs
         uses: actions/cache@v4
