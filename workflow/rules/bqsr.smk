@@ -9,10 +9,8 @@
 #
 # Inputs : results/dedup/{sample}.dedup.bam, known-sites VCFs, reference FASTA
 # Outputs: results/bqsr/{sample}.bqsr.bam (+ .bai), recal table
+# Helpers: known_sites_args() — defined in common.smk
 # =============================================================================
-
-def _known_sites_args(_):
-    return " ".join(f"--known-sites {p}" for p in config["reference"]["known_sites"])
 
 
 rule base_recalibrator:
@@ -27,7 +25,7 @@ rule base_recalibrator:
     log:
         "logs/bqsr/{sample}.recal.log",
     params:
-        known_sites = _known_sites_args,
+        known_sites = known_sites_args,
     threads: config["resources"]["bqsr"]["threads"]
     resources:
         mem_mb  = config["resources"]["bqsr"]["mem_mb"],

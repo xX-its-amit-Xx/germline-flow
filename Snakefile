@@ -38,23 +38,11 @@ QC       = RESULTS / "qc"
 PLINK    = RESULTS / "plink"
 REPORT   = RESULTS / "report"
 
-# ---- helpers -----------------------------------------------------------------
-
-def get_fastqs(wildcards):
-    """Return the paired FASTQs for a given sample."""
-    row = samples_df.loc[wildcards.sample]
-    return {"r1": row["fastq_1"], "r2": row["fastq_2"]}
-
-
-def get_sex(sample: str) -> str:
-    """Return reported sex from the sample sheet, or 'U' if absent."""
-    if "sex" in samples_df.columns:
-        return str(samples_df.loc[sample, "sex"] or "U").upper()
-    return "U"
-
-
 # ---- include rule modules ----------------------------------------------------
+# common.smk must be included first because every other rule file references
+# its helper functions.
 
+include: "workflow/rules/common.smk"
 include: "workflow/rules/align.smk"
 include: "workflow/rules/markdup.smk"
 include: "workflow/rules/bqsr.smk"

@@ -23,19 +23,25 @@ if FILTER_MODE not in {"vqsr", "hard_filter"}:
 rule write_sample_map:
     """
     Generate the tab-separated sample-name-map that GenomicsDBImport reads.
-    Split into its own rule (instead of inlined into genomicsdb_import's
-    shell:) so we can build it with a tiny Python `run:` block and avoid
-    fragile multi-line shell-quoting.
+    Kept as its own rule (rather than inlined into genomicsdb_import) so the
+    file ends up under JOINT/ where it's visible for debugging.
     """
     input:
         gvcfs = expand(str(GVCF / "{sample}.g.vcf.gz"), sample=SAMPLES),
     output:
         sample_map = JOINT / "sample_map.tsv",
-    run:
-        Path(output.sample_map).parent.mkdir(parents=True, exist_ok=True)
-        with open(output.sample_map, "w") as fh:
-            for s in SAMPLES:
-                fh.write(f"{s}\t{GVCF}/{s}.g.vcf.gz\n")
+    log:
+        "logs/jointgeno/write_sample_map.log",
+    params:
+        # printf-format string with literal \t and \n escapes; printf interprets
+        # them at runtime. See workflow/rules/common.smk for the builder.
+        fmt = sample_map_format_string(),
+    shell:
+        r"""
+        set -euo pipefail
+        mkdir -p $(dirname {output.sample_map})
+        printf '{params.fmt}\n' > {output.sample_map} 2> {log}
+        """
 
 
 rule genomicsdb_import:
@@ -107,12 +113,6 @@ rule genotype_gvcfs:
 
 if FILTER_MODE == "hard_filter":
 
-    def _hard_filter_args(kind: str) -> str:
-        parts = []
-        for f in config["joint_calling"]["hard_filters"][kind]:
-            parts.append(f"--filter-name {f['name']} --filter-expression \"{f['expression']}\"")
-        return " ".join(parts)
-
     rule select_and_hardfilter_snps:
         input:
             vcf   = JOINT / "cohort.raw.vcf.gz",
@@ -123,7 +123,7 @@ if FILTER_MODE == "hard_filter":
         log:
             "logs/jointgeno/hardfilter_snps.log",
         params:
-            filters = _hard_filter_args("snp"),
+            filters = hard_filter_args("snp"),
         conda:
             "../envs/gatk.yaml"
         resources:
@@ -150,7 +150,7 @@ if FILTER_MODE == "hard_filter":
         log:
             "logs/jointgeno/hardfilter_indels.log",
         params:
-            filters = _hard_filter_args("indel"),
+            filters = hard_filter_args("indel"),
         conda:
             "../envs/gatk.yaml"
         resources:
