@@ -107,9 +107,13 @@ rule plink_pca:
     shell:
         r"""
         set -euo pipefail
+        # --bad-freqs lets PLINK2 impute allele frequencies from < 50 samples.
+        # It's a no-op on real cohorts (>=50 samples); only matters for tiny
+        # test sets where imputed MAFs are necessarily inexact anyway.
         plink2 \
             --pfile {params.in_prefix} \
             --pca {params.ncomp} \
+            --bad-freqs \
             --out {params.out_prefix} \
             2> {log}
         """
