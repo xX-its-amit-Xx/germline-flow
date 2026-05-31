@@ -1,0 +1,15 @@
+# Force LF line endings for files that will execute on Linux (CI + SLURM).
+# Without this, a clone+commit cycle on a Windows workstation can leave CRLF
+# line endings in shell scripts and bash will refuse to run them with the
+# infamous "/usr/bin/env: 'bash\r': No such file or directory" error.
+
+*.sh        text eol=lf
+*.py        text eol=lf
+*.smk       text eol=lf
+Snakefile   text eol=lf
+Makefile    text eol=lf
+*.yaml      text eol=lf
+*.yml       text eol=lf
+*.toml      text eol=lf
+*.tsv       text eol=lf
+*.md        text eol=lf

@@ -1,0 +1,13 @@
+# Aligner + general BAM/VCF manipulation tooling.
+# bcftools lives here because we use it for VCF concat in the hard-filter branch.
+name: germline-flow-align
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - bwa-mem2 =2.2.1
+  - samtools =1.21
+  - bcftools =1.21
+  - htslib   =1.21
+  - tabix    =1.11

@@ -1,0 +1,4 @@
+sample	fastq_1	fastq_2	sex
+NA12878	data/fastq/NA12878_R1.fastq.gz	data/fastq/NA12878_R2.fastq.gz	F
+NA12891	data/fastq/NA12891_R1.fastq.gz	data/fastq/NA12891_R2.fastq.gz	M
+NA12892	data/fastq/NA12892_R1.fastq.gz	data/fastq/NA12892_R2.fastq.gz	F

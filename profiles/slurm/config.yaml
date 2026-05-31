@@ -1,0 +1,103 @@
+# =============================================================================
+# Snakemake SLURM profile for germline-flow.
+#
+# Submits each job as a single `sbatch` task. Reads memory / runtime / threads
+# from the rule's `resources:` block (which in turn reads config.yaml).
+#
+# Activate with:
+#     snakemake --profile profiles/slurm --use-conda
+#
+# Tested with Snakemake 7.32 + slurm-21.08. For Snakemake 8.x with the
+# snakemake-executor-plugin-slurm, swap the `cluster:` and `cluster-status:`
+# stanzas for `executor: slurm` and `default-resources: ...` — see comments
+# at the bottom of this file.
+# =============================================================================
+
+# ---- account / partition / output ------------------------------------------
+# Override these in your local fork OR via:
+#   SLURM_ACCOUNT=my_acct SLURM_PARTITION=short snakemake --profile profiles/slurm ...
+
+cluster: >
+  sbatch
+    --parsable
+    --job-name=gflow.{rule}.{wildcards}
+    --partition=${SLURM_PARTITION:-general}
+    --account=${SLURM_ACCOUNT:-default}
+    --cpus-per-task={threads}
+    --mem={resources.mem_mb}
+    --time={resources.runtime}
+    --output=logs/slurm/%x.%j.out
+    --error=logs/slurm/%x.%j.err
+
+cluster-status: profiles/slurm/status.sh
+
+# ---- defaults applied to every rule (fall back if a rule omits a resource)
+default-resources:
+  - mem_mb=4000
+  - runtime=60
+  - threads=1
+
+# ---- concurrency limits ----------------------------------------------------
+jobs:        100         # max simultaneous job submissions
+max-jobs-per-second: 5
+max-status-checks-per-second: 5
+local-cores: 4           # local compute for rules that don't go to the cluster
+restart-times: 1         # retry once on transient OOM / node failure
+
+# ---- general behaviour -----------------------------------------------------
+use-conda:   true
+conda-frontend: mamba
+keep-going:  true
+rerun-incomplete: true
+printshellcmds: true
+latency-wait: 60        # NFS metadata sync grace
+
+# ---- per-rule overrides ----------------------------------------------------
+# Override the global defaults for rules that need fatter nodes or longer walls.
+set-resources:
+  - bwa_mem2_align:mem_mb=32000
+  - bwa_mem2_align:runtime=720
+  - bwa_mem2_align:threads=8
+
+  - markdup_samtools:mem_mb=16000
+  - markdup_samtools:runtime=240
+  - markdup_samtools:threads=4
+
+  - markdup_spark:mem_mb=24000
+  - markdup_spark:runtime=240
+  - markdup_spark:threads=8
+
+  - base_recalibrator:mem_mb=8000
+  - base_recalibrator:runtime=240
+  - apply_bqsr:mem_mb=8000
+  - apply_bqsr:runtime=240
+
+  - haplotypecaller:mem_mb=8000
+  - haplotypecaller:runtime=720
+
+  - genomicsdb_import:mem_mb=24000
+  - genomicsdb_import:runtime=480
+  - genotype_gvcfs:mem_mb=16000
+  - genotype_gvcfs:runtime=480
+
+  - vqsr_snp:mem_mb=16000
+  - vqsr_indel:mem_mb=16000
+  - apply_vqsr:mem_mb=16000
+
+  - plink_import:mem_mb=8000
+  - plink_qc_filter:mem_mb=8000
+  - plink_pca:mem_mb=8000
+  - plink_king:mem_mb=8000
+
+# =============================================================================
+# Snakemake 8.x users: comment out 'cluster:' / 'cluster-status:' above and use
+#
+#   executor: slurm
+#   default-resources:
+#     slurm_account: "${SLURM_ACCOUNT:-default}"
+#     slurm_partition: "${SLURM_PARTITION:-general}"
+#     mem_mb: 4000
+#     runtime: 60
+#
+# everything else (jobs:, set-resources:, use-conda:) is unchanged.
+# =============================================================================

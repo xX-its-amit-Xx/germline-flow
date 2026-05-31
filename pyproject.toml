@@ -1,0 +1,16 @@
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+# E501: line length is enforced by `line-length` above; pyflakes handles real issues.
+select = ["E", "F", "I", "W", "B", "UP"]
+ignore = [
+    "E501",   # long lines — many of the captions / docstrings exceed this on purpose
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Snakemake injects the `snakemake` global at runtime when running a script via
+# the `script:` directive. ruff doesn't see the injection, so F821 (undefined
+# name) fires on every access. Suppress it only for the script files.
+"workflow/scripts/*.py" = ["F821"]

@@ -1,0 +1,19 @@
+# Tools needed by test/scripts/build_test_data.sh to build the CI fixtures
+# from scratch (chr20 reference slice + synthetic FASTQs). Not used by the
+# pipeline itself — only by the test-data bootstrap step in CI.
+name: germline-flow-test-driver
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - python    =3.11
+  - samtools  =1.21
+  - bcftools  =1.21
+  - bwa-mem2  =2.2.1
+  - gatk4     =4.5.0.0
+  - openjdk   =17.0.10
+  - wgsim     =1.0
+  - curl
+  - tabix
+  - htslib    =1.21

@@ -1,0 +1,4 @@
+sample	fastq_1	fastq_2	sex
+SIM01	test/data/fastq/SIM01_R1.fastq.gz	test/data/fastq/SIM01_R2.fastq.gz	F
+SIM02	test/data/fastq/SIM02_R1.fastq.gz	test/data/fastq/SIM02_R2.fastq.gz	M
+SIM03	test/data/fastq/SIM03_R1.fastq.gz	test/data/fastq/SIM03_R2.fastq.gz	F

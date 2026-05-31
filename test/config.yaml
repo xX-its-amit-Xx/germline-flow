@@ -1,0 +1,68 @@
+# germline-flow test config: chr20:1-5,000,000 slice, three synthetic samples.
+# Everything is tuned to make CI fast (~10 min) while still exercising every rule.
+
+samples: test/samples.tsv
+
+reference:
+  fasta: test/data/reference/chr20_slice.fa
+  known_sites:
+    - test/data/reference/known_indels.chr20_slice.vcf.gz
+    - test/data/reference/dbsnp.chr20_slice.vcf.gz
+  calling_intervals: test/data/reference/chr20_slice.interval_list
+
+  # VQSR resources are unused in the test (filter_mode = hard_filter), so we
+  # repeat the dbsnp slice as a placeholder — the rule never gets invoked.
+  vqsr_resources:
+    snp:
+      hapmap: test/data/reference/dbsnp.chr20_slice.vcf.gz
+      omni:   test/data/reference/dbsnp.chr20_slice.vcf.gz
+      g1k:    test/data/reference/dbsnp.chr20_slice.vcf.gz
+      dbsnp:  test/data/reference/dbsnp.chr20_slice.vcf.gz
+    indel:
+      mills:  test/data/reference/known_indels.chr20_slice.vcf.gz
+      dbsnp:  test/data/reference/dbsnp.chr20_slice.vcf.gz
+
+alignment:
+  threads: 2
+  read_group_platform: ILLUMINA
+  read_group_library_suffix: lib1
+
+dedup:
+  tool: samtools
+
+joint_calling:
+  filter_mode: hard_filter
+  hard_filters:
+    snp:
+      - {name: "QD2",  expression: "QD < 2.0"}
+      - {name: "FS60", expression: "FS > 60.0"}
+      - {name: "SOR3", expression: "SOR > 3.0"}
+    indel:
+      - {name: "QD2",   expression: "QD < 2.0"}
+      - {name: "FS200", expression: "FS > 200.0"}
+  vqsr:
+    snp_truth_sensitivity: 99.7
+    indel_truth_sensitivity: 99.0
+
+qc:
+  coverage_threshold: 4         # very low; synthetic data is ~5x by design
+  titv_min: 0.5                 # relax bounds — synthetic doesn't model CpG bias
+  titv_max: 5.0
+  het_hom_min: 0.5
+  het_hom_max: 5.0
+
+plink_export:
+  call_rate_min: 0.50           # relax for low-coverage synthetic data
+  maf_min: 0.0
+  hwe_p_min: 1.0e-30            # essentially off for 3-sample cohort
+  king_cutoff: 0.0884
+  pca_components: 2             # only 3 samples -> max 2 PCs
+
+resources:
+  default:        {mem_mb: 2000, runtime: 30, threads: 1}
+  align:          {mem_mb: 4000, runtime: 60, threads: 2}
+  markdup:        {mem_mb: 4000, runtime: 30, threads: 2}
+  bqsr:           {mem_mb: 4000, runtime: 30, threads: 1}
+  haplotypecaller: {mem_mb: 4000, runtime: 30, threads: 1}
+  jointgeno:      {mem_mb: 4000, runtime: 30, threads: 1}
+  vqsr:           {mem_mb: 4000, runtime: 30, threads: 1}

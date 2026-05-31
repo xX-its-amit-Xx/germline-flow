@@ -1,0 +1,12 @@
+# Used by CI to lint the Snakefile and run the tiny end-to-end test driver.
+name: germline-flow-lint
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - python    =3.11
+  - snakemake =7.32.4
+  - mamba     =1.5.8
+  - ruff      =0.5.0
+  - pandas    =2.2.2

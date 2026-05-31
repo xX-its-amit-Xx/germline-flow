@@ -1,0 +1,133 @@
+# =============================================================================
+# germline-flow default configuration
+#
+# Edit this file (or override on the CLI with --config key=value, or supply a
+# fresh --configfile) to point at your reference, sample sheet, and intervals.
+# =============================================================================
+
+# ---- inputs ------------------------------------------------------------------
+
+samples: config/samples.tsv
+
+# ---- reference & known sites -------------------------------------------------
+# All paths are relative to the working directory unless absolute.
+
+reference:
+  # Primary assembly FASTA. Must be accompanied by .fai, .dict, and the BWA-MEM2
+  # index files (.0123/.amb/.ann/.bwt.2bit.64/.pac). If they don't exist they
+  # will be built by the 'index_reference' rule (one-time, ~30 min for GRCh38).
+  fasta: resources/reference/GRCh38.primary_assembly.genome.fa
+
+  # Known-sites VCFs for BQSR. Mills + dbSNP is the GATK-recommended baseline.
+  known_sites:
+    - resources/reference/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz
+    - resources/reference/dbsnp_151.hg38.vcf.gz
+
+  # Restrict calling to these intervals. For WGS use the GATK
+  # wgs_calling_regions.hg38.interval_list (drops centromeres/telomeres).
+  # For WES, point at your capture kit's BED file.
+  calling_intervals: resources/reference/wgs_calling_regions.hg38.interval_list
+
+  # VQSR resource bundles (only used when joint_calling.filter_mode == "vqsr").
+  vqsr_resources:
+    snp:
+      hapmap: resources/reference/hapmap_3.3.hg38.vcf.gz
+      omni:   resources/reference/1000G_omni2.5.hg38.vcf.gz
+      g1k:    resources/reference/1000G_phase1.snps.high_confidence.hg38.vcf.gz
+      dbsnp:  resources/reference/dbsnp_151.hg38.vcf.gz
+    indel:
+      mills:  resources/reference/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz
+      dbsnp:  resources/reference/dbsnp_151.hg38.vcf.gz
+
+# ---- alignment & dedup -------------------------------------------------------
+
+alignment:
+  # bwa-mem2 thread count per sample. Tune to your hardware; 8-16 is typical.
+  threads: 8
+  # The aligner sets these in the @RG header (per-sample read group).
+  # The pipeline auto-fills SM=sample and ID=sample.L1 unless you override here.
+  read_group_platform: ILLUMINA
+  read_group_library_suffix: lib1
+
+dedup:
+  # One of: "samtools" (fast, single-node) or "gatk_spark" (parallelisable on
+  # cluster, uses MarkDuplicatesSpark). Both produce equivalent BAM output.
+  tool: samtools
+
+# ---- joint calling & filtering ----------------------------------------------
+
+joint_calling:
+  # One of: "vqsr" or "hard_filter".
+  # VQSR needs >=30 WGS or >=100 WES samples to model the distributions reliably.
+  # For smaller cohorts (or trio / single-sample callsets) use hard_filter.
+  filter_mode: hard_filter
+
+  # GATK hard-filter expressions (used when filter_mode == "hard_filter").
+  # Defaults are the GATK Best Practices "SNP/INDEL hard filtering" recommendations.
+  hard_filters:
+    snp:
+      - {name: "QD2",     expression: "QD < 2.0"}
+      - {name: "FS60",    expression: "FS > 60.0"}
+      - {name: "MQ40",    expression: "MQ < 40.0"}
+      - {name: "MQRS-12", expression: "MQRankSum < -12.5"}
+      - {name: "RPRS-8",  expression: "ReadPosRankSum < -8.0"}
+      - {name: "SOR3",    expression: "SOR > 3.0"}
+    indel:
+      - {name: "QD2",     expression: "QD < 2.0"}
+      - {name: "FS200",   expression: "FS > 200.0"}
+      - {name: "RPRS-20", expression: "ReadPosRankSum < -20.0"}
+      - {name: "SOR10",   expression: "SOR > 10.0"}
+
+  vqsr:
+    snp_truth_sensitivity: 99.7
+    indel_truth_sensitivity: 99.0
+
+# ---- QC thresholds ----------------------------------------------------------
+
+qc:
+  coverage_threshold: 20          # report % bases covered >= this depth
+  titv_min: 1.9                   # WGS ~2.0-2.1; WES ~3.0-3.3
+  titv_max: 3.5
+  het_hom_min: 1.4                # human non-consanguineous typical ~1.5-2.0
+  het_hom_max: 2.5
+
+# ---- PLINK2 export & QC -----------------------------------------------------
+
+plink_export:
+  call_rate_min: 0.95             # drop variants and samples below this call rate
+  maf_min: 0.01                   # minor-allele-frequency floor (set 0 to keep all)
+  hwe_p_min: 1.0e-6               # Hardy-Weinberg exact-test p floor
+  king_cutoff: 0.0884             # 2nd-degree relatives — PLINK2 --king-cutoff default
+  pca_components: 10
+
+# ---- resources (per-rule defaults; SLURM profile reads these) ----------------
+
+resources:
+  default:
+    mem_mb: 4000
+    runtime: 60        # minutes
+    threads: 1
+  align:
+    mem_mb: 32000
+    runtime: 720
+    threads: 8
+  markdup:
+    mem_mb: 16000
+    runtime: 240
+    threads: 4
+  bqsr:
+    mem_mb: 8000
+    runtime: 240
+    threads: 2
+  haplotypecaller:
+    mem_mb: 8000
+    runtime: 720
+    threads: 2
+  jointgeno:
+    mem_mb: 16000
+    runtime: 480
+    threads: 4
+  vqsr:
+    mem_mb: 16000
+    runtime: 240
+    threads: 2

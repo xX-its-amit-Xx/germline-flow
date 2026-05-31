@@ -1,0 +1,8 @@
+# PLINK2 (currently in alpha, but stable enough for production; pinned).
+name: germline-flow-plink
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - plink2 =2.00a5.10

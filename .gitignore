@@ -1,0 +1,48 @@
+# Snakemake
+.snakemake/
+.snakemake.log
+*.benchmark.txt
+
+# Pipeline outputs
+results/
+logs/
+
+# Large reference & raw data — never commit
+resources/reference/*.fa
+resources/reference/*.fa.*
+resources/reference/*.fasta
+resources/reference/*.dict
+resources/reference/*.bwt*
+resources/reference/*.0123
+resources/reference/*.amb
+resources/reference/*.ann
+resources/reference/*.pac
+resources/reference/*.vcf.gz
+resources/reference/*.vcf.gz.tbi
+data/fastq/
+data/bam/
+
+# Conda envs created by snakemake --use-conda
+.conda/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Docs build
+docs/_build/
+
+# Test artifacts (downsampled CI data IS committed under test/)
+!test/data/

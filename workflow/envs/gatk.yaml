@@ -1,0 +1,12 @@
+# GATK4 + its OpenJDK runtime + Picard (some legacy tasks).
+# Pinned to a known-good combination — GATK is picky about Java major version.
+name: germline-flow-gatk
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - gatk4   =4.5.0.0
+  - picard  =3.1.1
+  - openjdk =17.0.10
+  - samtools =1.21
