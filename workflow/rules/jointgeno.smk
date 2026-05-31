@@ -36,6 +36,13 @@ rule write_sample_map:
         # printf-format string with literal \t and \n escapes; printf interprets
         # them at runtime. See workflow/rules/common.smk for the builder.
         fmt = sample_map_format_string(),
+    conda:
+        # The rule only needs coreutils, but snakemake --lint requires every
+        # rule to pin an environment. Reuse the lightweight align env.
+        "../envs/align.yaml"
+    resources:
+        mem_mb  = 500,
+        runtime = 5,
     shell:
         r"""
         set -euo pipefail
