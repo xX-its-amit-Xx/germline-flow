@@ -13,13 +13,16 @@ KING kinship coefficient interpretation (Manichaikul et al. 2010):
     < 0.0442    unrelated
 """
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
+
+# `from __future__ import annotations` cannot be used here because Snakemake's
+# `script:` directive prepends its globals injection, pushing any __future__
+# imports past line 1. We target Python 3.11+ so the modern type syntax works
+# natively without it.
 
 snakemake: Any  # type: ignore[no-redef]
 

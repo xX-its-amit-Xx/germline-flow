@@ -16,8 +16,6 @@ Figures:
 The template is inlined to avoid a fourth file under workflow/scripts/.
 """
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 from typing import Any
@@ -27,6 +25,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 from jinja2 import Template
 from plotly.io import to_html
+
+# No `from __future__ import annotations` — Snakemake's `script:` directive
+# prepends a globals injection block that pushes any future imports past line 1.
+# Targeting Python 3.11+ means PEP 604 / 585 type syntax works natively.
 
 snakemake: Any  # type: ignore[no-redef]
 

@@ -14,11 +14,15 @@ A "reported_sex" from the sample sheet, if provided, is recorded for
 later mismatch flagging in the cohort report.
 """
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 from typing import Any
+
+# Snakemake's `script:` directive injects a globals block at the top of the
+# script, which means `from __future__ import annotations` would land after
+# it and fail with SyntaxError. We target Python 3.11+ (qc.yaml pins it), so
+# PEP 604 `X | Y` unions and PEP 585 generic builtins work natively without
+# the future import.
 
 # Snakemake injects the global `snakemake` object when running via `script:`.
 snakemake: Any  # type: ignore[no-redef]

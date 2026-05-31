@@ -19,14 +19,17 @@ emitted as NaN and flagged with a TODO. A production deployment should add a
 VerifyBamID2 rule and patch its FREEMIX output in here.
 """
 
-from __future__ import annotations
-
 import json
 import re
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
+
+# No `from __future__ import annotations` here: Snakemake's `script:` directive
+# prepends a globals injection block, which would push the future import past
+# line 1 and raise SyntaxError. We target Python 3.11+ (qc.yaml pins it) so
+# PEP 604 `X | Y` and PEP 585 generic builtins work natively.
 
 snakemake: Any  # type: ignore[no-redef]
 
